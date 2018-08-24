@@ -19,37 +19,29 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-import setuptools
+from ..communication import RqSimple
+from ..communication import RsCheckSum
+from ..communication import RsSimple
+from ..communication.port import Port
+from ..communication.rqpid import RqPidCommand
+from ..communication.rqprimitives import RqByte
+from ..communication.rqprimitives import RqDword
+from ..communication.rqprimitives import RqGroup
 
-with open('README.md', 'r') as fh:
-    long_description = fh.read()
 
-with open('requirements.txt') as r:
-    install_requirements = []
-    for line in r:
-        install_requirements.append(line)
+class VerifyPassword:
+    def __init__(self, port, address=0xFFFFFFFF):
+        # type: (Port, int) -> VerifyPassword
+        self.port = port
+        self.address = address
 
-setuptools.setup(
-    name='fpscanner',
-    version='0.1.0',
-    description='',
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    author='Alexey Niktin',
-    author_email='nikialeksey@gmail.com',
-    url='https://github.com/nikialeksey/fpscanner',
-    license='MIT',
-    packages=setuptools.find_packages(),
-    classifiers=[
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: MacOS :: MacOS X",
-        "Operating System :: POSIX",
-        "Operating System :: POSIX :: BSD",
-        "Operating System :: POSIX :: Linux",
-        "Operating System :: Microsoft :: Windows",
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
-    ],
-    install_requires=install_requirements
-)
+    def execute(self):
+        # type: () -> bool
+        RqSimple(
+            pid=RqPidCommand(),
+            content=RqGroup(RqByte(0x13), RqDword(0)),
+            address=self.address
+        ).send_to(self.port)
+
+        bytes = RsCheckSum(RsSimple(self.port)).bytes()
+        return bytes.content()[0] == 0

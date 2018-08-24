@@ -19,37 +19,33 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-import setuptools
+from CommunicationException import CommunicationException
+from RsBytes import RsBytes
+from RsPackage import RsPackage
 
-with open('README.md', 'r') as fh:
-    long_description = fh.read()
 
-with open('requirements.txt') as r:
-    install_requirements = []
-    for line in r:
-        install_requirements.append(line)
+class RsCheckSum(RsPackage):
 
-setuptools.setup(
-    name='fpscanner',
-    version='0.1.0',
-    description='',
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    author='Alexey Niktin',
-    author_email='nikialeksey@gmail.com',
-    url='https://github.com/nikialeksey/fpscanner',
-    license='MIT',
-    packages=setuptools.find_packages(),
-    classifiers=[
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: MacOS :: MacOS X",
-        "Operating System :: POSIX",
-        "Operating System :: POSIX :: BSD",
-        "Operating System :: POSIX :: Linux",
-        "Operating System :: Microsoft :: Windows",
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
-    ],
-    install_requires=install_requirements
-)
+    def __init__(self, package):
+        # type: (RsPackage) -> RsCheckSum
+        self.origin = package
+
+    def bytes(self):
+        # type: () -> RsBytes
+        bytes = self.origin.bytes()
+
+        expected = bytes.pid()
+
+        length = bytes.length()
+        expected += (length >> 8) + (length & 0xFF)
+
+        for c in bytes.content():
+            expected += c
+        expected = expected & 0xFFFF
+
+        real = bytes.checksum()
+
+        if expected != real:
+            raise CommunicationException("Checksum is invalid. Expected {0}, was {1}".format(expected, real))
+
+        return bytes

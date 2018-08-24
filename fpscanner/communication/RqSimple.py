@@ -19,37 +19,41 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-import setuptools
+from RqPackage import RqPackage
+from port import Port
+from rqpid import RqPid
+from rqprimitives import RqByte
+from rqprimitives import RqBytes
+from rqprimitives import RqDword
+from rqprimitives import RqWord
 
-with open('README.md', 'r') as fh:
-    long_description = fh.read()
 
-with open('requirements.txt') as r:
-    install_requirements = []
-    for line in r:
-        install_requirements.append(line)
+class RqSimple(RqPackage):
 
-setuptools.setup(
-    name='fpscanner',
-    version='0.1.0',
-    description='',
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    author='Alexey Niktin',
-    author_email='nikialeksey@gmail.com',
-    url='https://github.com/nikialeksey/fpscanner',
-    license='MIT',
-    packages=setuptools.find_packages(),
-    classifiers=[
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: MacOS :: MacOS X",
-        "Operating System :: POSIX",
-        "Operating System :: POSIX :: BSD",
-        "Operating System :: POSIX :: Linux",
-        "Operating System :: Microsoft :: Windows",
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
-    ],
-    install_requires=install_requirements
-)
+    def __init__(self, pid, content, header=0xEF01, address=0xFFFFFFFF):
+        # type: (RqPid, RqBytes, int, int) -> RqSimple
+        self.header = header
+        self.address = address
+        self.pid = pid
+        self.content = content
+
+    def send_to(self, port):
+        # type: (Port) -> None
+        content = self.content.as_bytes()
+        length = len(content) + 2
+
+        request = RqWord(self.header).as_bytes() + \
+                  RqDword(self.address).as_bytes() + \
+                  RqByte(self.pid.as_byte()).as_bytes() + \
+                  RqWord(length).as_bytes()
+
+        checksum = request[6] + request[7] + request[8]
+        # content
+        for byte in content:
+            request.append(byte)
+            checksum += byte
+
+        # checksum
+        request += RqWord(checksum).as_bytes()
+
+        port.send(request)

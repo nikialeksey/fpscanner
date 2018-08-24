@@ -19,37 +19,37 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-import setuptools
+import struct
 
-with open('README.md', 'r') as fh:
-    long_description = fh.read()
+from serial import Serial
 
-with open('requirements.txt') as r:
-    install_requirements = []
-    for line in r:
-        install_requirements.append(line)
+from Port import Port
 
-setuptools.setup(
-    name='fpscanner',
-    version='0.1.0',
-    description='',
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    author='Alexey Niktin',
-    author_email='nikialeksey@gmail.com',
-    url='https://github.com/nikialeksey/fpscanner',
-    license='MIT',
-    packages=setuptools.find_packages(),
-    classifiers=[
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: MacOS :: MacOS X",
-        "Operating System :: POSIX",
-        "Operating System :: POSIX :: BSD",
-        "Operating System :: POSIX :: Linux",
-        "Operating System :: Microsoft :: Windows",
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
-    ],
-    install_requires=install_requirements
-)
+
+class SerialPort(Port):
+
+    def __init__(self, serial):
+        # type: (Serial) -> SerialPort
+        self.serial = serial
+
+    def __enter__(self):
+        if self.serial.isOpen():
+            self.serial.close()
+        self.serial.open()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.serial.close()
+
+    def bytes(self, length):
+        # type: (int) -> bytearray
+        return bytearray(
+            map(
+                lambda x: struct.unpack('@B', x)[0],
+                self.serial.read(length)
+            )
+        )
+
+    def send(self, bytes):
+        # type: (bytearray) -> None
+        self.serial.write(bytes)

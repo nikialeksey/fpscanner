@@ -19,37 +19,19 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-import setuptools
+from RqBytes import RqBytes
 
-with open('README.md', 'r') as fh:
-    long_description = fh.read()
 
-with open('requirements.txt') as r:
-    install_requirements = []
-    for line in r:
-        install_requirements.append(line)
+class RqDword(RqBytes):
+    def __init__(self, data):
+        # type: (int) -> RqDword
+        self.data = data
 
-setuptools.setup(
-    name='fpscanner',
-    version='0.1.0',
-    description='',
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    author='Alexey Niktin',
-    author_email='nikialeksey@gmail.com',
-    url='https://github.com/nikialeksey/fpscanner',
-    license='MIT',
-    packages=setuptools.find_packages(),
-    classifiers=[
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: MacOS :: MacOS X",
-        "Operating System :: POSIX",
-        "Operating System :: POSIX :: BSD",
-        "Operating System :: POSIX :: Linux",
-        "Operating System :: Microsoft :: Windows",
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
-    ],
-    install_requires=install_requirements
-)
+    def as_bytes(self):
+        # type: () -> bytearray
+        return bytearray([
+            (self.data >> 24) & 0xFF,
+            (self.data >> 16) & 0xFF,
+            (self.data >> 8) & 0xFF,
+            self.data & 0xFF
+        ])
