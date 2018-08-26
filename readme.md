@@ -1,6 +1,7 @@
 # Python driver for fingerprint sensors by Zhiantec - ZFM-20 series
 
 [![PyPI version](https://badge.fury.io/py/fpscanner.svg)](https://badge.fury.io/py/fpscanner)
+[![PDD status](http://www.0pdd.com/svg?name=nikialeksey/fpscanner)](http://www.0pdd.com/p?name=nikialeksey/fpscanner)
 
 ## Is your scanner can be managed by this library?
 If your scanner is ZFM-20 or his cheap clone then it possible. I made this library inspired by 
