@@ -52,3 +52,5 @@ with SerialPort(Serial(port='...', baudrate=9600 * 6, timeout=2)) as port:
     image = UpImage(rq, rs).image()
     image.show()
 ```
+
+@todo #none:30m Add explanation for enrolling, searching and matching
