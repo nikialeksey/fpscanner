@@ -19,26 +19,23 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-from RsCheckSum import RsCheckSum
-from RsSimple import RsSimple
-from port import Port
+from RsPackage import RsPackage
 
 
 class RsDataPacket:
-    def __init__(self, port):
-        # type: (Port) -> RsDataPacket
-        self.port = port
+    def __init__(self, rs):
+        # type: (RsPackage) -> RsDataPacket
+        self.rs = rs
 
     def content(self):
         # type: () -> list[bytearray]
         content = []
         n = 0  # number of packets
 
-        rs = RsCheckSum(RsSimple(self.port))
-        bytes = rs.bytes()
+        bytes = self.rs.bytes()
         while bytes.pid() != 0x08:
             content.append(bytes.content())
-            bytes = rs.bytes()
+            bytes = self.rs.bytes()
             n += 1
         content.append(bytes.content())
 

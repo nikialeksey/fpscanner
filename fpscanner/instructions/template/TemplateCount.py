@@ -19,29 +19,29 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-from ...communication import RqSimple
-from ...communication import RsCheckSum
-from ...communication import RsSimple
-from ...communication.port import Port
-from ...communication.rqpid import RqPidCommand
+from ...communication import RqPackage
+from ...communication import RsPackage
 from ...communication.rqprimitives import RqByte
+from ...communication.rsprimitives import RsWord
 from ...instructions.ConfirmationCode import ConfirmationCode
+from ...instructions.InstructionException import InstructionException
 
 
-class GenImg:
-    def __init__(self, port, address=0xFFFFFFFF):
-        # type: (Port, int) -> GenImg
-        self.port = port
-        self.address = address
-        self.rq = RqSimple(
-            pid=RqPidCommand(),
-            content=RqByte(0x01),
-            address=self.address
-        )
-        self.rs = RsCheckSum(RsSimple(self.port))
+class TemplateCount:
 
-    def execute(self):
-        # type: () -> bool
-        self.rq.send_to(self.port)
+    def __init__(self, rq, rs):
+        # type: (RqPackage, RsPackage) -> TemplateCount
+        self.rq = rq
+        self.rs = rs
+
+    def as_int(self):
+        # type: () -> int
+        self.rq.send(RqByte(0x1D))
         bytes = self.rs.bytes()
-        return ConfirmationCode(bytes.content()[0]).is_success()
+
+        content = bytes.content()
+        confirmation = ConfirmationCode(content[0])
+        if not confirmation.is_success():
+            raise InstructionException("Incorrect confirmation code: {0}".format(confirmation.as_str()))
+
+        return RsWord(content[1], content[2]).as_int()

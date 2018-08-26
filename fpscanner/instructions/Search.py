@@ -21,13 +21,10 @@
 # SOFTWARE.
 from ConfirmationCode import ConfirmationCode
 from InstructionException import InstructionException
-from ..communication import RqSimple
-from ..communication import RsCheckSum
-from ..communication import RsSimple
-from ..communication.port import Port
+from ..communication import RqPackage
+from ..communication import RsPackage
 from ..communication.rqbuffer import RqCharBuffer
 from ..communication.rqbuffer import RqCharBuffer1
-from ..communication.rqpid import RqPidCommand
 from ..communication.rqprimitives import RqByte
 from ..communication.rqprimitives import RqGroup
 from ..communication.rqprimitives import RqWord
@@ -50,24 +47,20 @@ class SearchResult:
 
 
 class Search:
-    def __init__(self, port, start, count, buffer=RqCharBuffer1(), address=0xFFFFFFFF):
-        # type: (Port, int, int, RqCharBuffer, int) -> Search
-        self.port = port
-        self.rq = RqSimple(
-            pid=RqPidCommand(),
-            content=RqGroup(
-                RqByte(0x04),
-                RqByte(buffer.number()),
-                RqWord(start),
-                RqWord(count)
-            ),
-            address=address
+    def __init__(self, rq, rs, start, count, buffer=RqCharBuffer1()):
+        # type: (RqPackage, RsPackage, int, int, RqCharBuffer) -> Search
+        self.rq = rq
+        self.rs = rs
+        self.content = RqGroup(
+            RqByte(0x04),
+            RqByte(buffer.number()),
+            RqWord(start),
+            RqWord(count)
         )
-        self.rs = RsCheckSum(RsSimple(self.port))
 
     def execute(self):
         # type: () -> SearchResult
-        self.rq.send_to(self.port)
+        self.rq.send(self.content)
 
         bytes = self.rs.bytes()
         confirmation = ConfirmationCode(bytes.content()[0])

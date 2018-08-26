@@ -21,28 +21,20 @@
 # SOFTWARE.
 from ConfirmationCode import ConfirmationCode
 from InstructionException import InstructionException
-from ..communication import RqSimple
-from ..communication import RsCheckSum
-from ..communication import RsSimple
-from ..communication.port import Port
-from ..communication.rqpid import RqPidCommand
+from ..communication import RqPackage
+from ..communication import RsPackage
 from ..communication.rqprimitives import RqByte
 
 
 class Handshake:
-    def __init__(self, port, address=0xFFFFFFFF):
-        # type: (Port, int) -> Handshake
-        self.port = port
-        self.rq = RqSimple(
-            pid=RqPidCommand(),
-            content=RqByte(0x17),
-            address=address
-        )
-        self.rs = RsCheckSum(RsSimple(self.port))
+    def __init__(self, rq, rs):
+        # type: (RqPackage, RsPackage) -> Handshake
+        self.rq = rq
+        self.rs = rs
 
-    def execute(self):
+    def make(self):
         # type: () -> None
-        self.rq.send_to(self.port)
+        self.rq.send(RqByte(0x17))
         bytes = self.rs.bytes()
 
         confirmation = ConfirmationCode(bytes.content()[0])

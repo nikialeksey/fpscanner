@@ -19,29 +19,22 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-from ..communication import RqSimple
-from ..communication import RsCheckSum
-from ..communication import RsSimple
-from ..communication.port import Port
-from ..communication.rqpid import RqPidCommand
+from ..communication import RqPackage
+from ..communication import RsPackage
 from ..communication.rqprimitives import RqByte
 from ..communication.rqprimitives import RqDword
 from ..communication.rqprimitives import RqGroup
 
 
 class VerifyPassword:
-    def __init__(self, port, address=0xFFFFFFFF):
-        # type: (Port, int) -> VerifyPassword
-        self.port = port
-        self.address = address
+    def __init__(self, rq, rs):
+        # type: (RqPackage, RsPackage) -> VerifyPassword
+        self.rq = rq
+        self.rs = rs
 
-    def execute(self):
+    def is_correct(self):
         # type: () -> bool
-        RqSimple(
-            pid=RqPidCommand(),
-            content=RqGroup(RqByte(0x13), RqDword(0)),
-            address=self.address
-        ).send_to(self.port)
+        self.rq.send(RqGroup(RqByte(0x13), RqDword(0)))
 
-        bytes = RsCheckSum(RsSimple(self.port)).bytes()
+        bytes = self.rs.bytes()
         return bytes.content()[0] == 0

@@ -30,16 +30,16 @@ from rqprimitives import RqWord
 
 class RqSimple(RqPackage):
 
-    def __init__(self, pid, content, header=0xEF01, address=0xFFFFFFFF):
-        # type: (RqPid, RqBytes, int, int) -> RqSimple
+    def __init__(self, pid, port, header=0xEF01, address=0xFFFFFFFF):
+        # type: (RqPid, Port, int, int) -> RqSimple
         self.header = header
         self.address = address
         self.pid = pid
-        self.content = content
+        self.port = port
 
-    def send_to(self, port):
-        # type: (Port) -> None
-        content = self.content.as_bytes()
+    def send(self, content):
+        # type: (RqBytes) -> None
+        content = content.as_bytes()
         length = len(content) + 2
 
         request = RqWord(self.header).as_bytes() + \
@@ -56,4 +56,4 @@ class RqSimple(RqPackage):
         # checksum
         request += RqWord(checksum).as_bytes()
 
-        port.send(request)
+        self.port.send(request)

@@ -19,31 +19,22 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-from ...communication import RqSimple
-from ...communication import RsCheckSum
-from ...communication import RsSimple
-from ...communication.port import Port
-from ...communication.rqpid import RqPidCommand
+from ...communication import RqPackage
+from ...communication import RsPackage
 from ...communication.rqprimitives import RqByte
 from ...instructions.ConfirmationCode import ConfirmationCode
 from ...instructions.InstructionException import InstructionException
 
 
 class RegModel:
-    def __init__(self, port, address=0xFFFFFFFF):
-        # type: (Port, int) -> RegModel
-        self.port = port
-        self.address = address
-        self.rq = RqSimple(
-            pid=RqPidCommand(),
-            content=RqByte(0x05),
-            address=self.address
-        )
-        self.rs = RsCheckSum(RsSimple(self.port))
+    def __init__(self, rq, rs):
+        # type: (RqPackage, RsPackage) -> RegModel
+        self.rq = rq
+        self.rs = rs
 
     def execute(self):
         # type: () -> None
-        self.rq.send_to(self.port)
+        self.rq.send(RqByte(0x05))
 
         bytes = self.rs.bytes()
 

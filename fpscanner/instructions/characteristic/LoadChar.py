@@ -19,12 +19,9 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-from ...communication import RqSimple
-from ...communication import RsCheckSum
-from ...communication import RsSimple
-from ...communication.port import Port
+from ...communication import RqPackage
+from ...communication import RsPackage
 from ...communication.rqbuffer import RqCharBuffer
-from ...communication.rqpid import RqPidCommand
 from ...communication.rqprimitives import RqByte
 from ...communication.rqprimitives import RqGroup
 from ...communication.rqprimitives import RqWord
@@ -33,22 +30,16 @@ from ...instructions.InstructionException import InstructionException
 
 
 class LoadChar:
-    def __init__(self, port, buffer, number, address=0xFFFFFFFF):
-        # type: (Port, RqCharBuffer, int, int) -> LoadChar
-        self.port = port
+    def __init__(self, rq, rs, buffer, number):
+        # type: (RqPackage, RsPackage, RqCharBuffer, int) -> LoadChar
         self.buffer = buffer
         self.number = number
-        self.address = address
-        self.rq = RqSimple(
-            pid=RqPidCommand(),
-            content=RqGroup(RqByte(0x07), RqByte(self.buffer.number()), RqWord(self.number)),
-            address=self.address
-        )
-        self.rs = RsCheckSum(RsSimple(self.port))
+        self.rq = rq
+        self.rs = rs
 
     def execute(self):
         # type: () -> None
-        self.rq.send_to(self.port)
+        self.rq.send(RqGroup(RqByte(0x07), RqByte(self.buffer.number()), RqWord(self.number)))
 
         bytes = self.rs.bytes()
         confirmation = ConfirmationCode(bytes.content()[0])

@@ -21,41 +21,34 @@
 # SOFTWARE.
 from PIL import Image
 
-from ...communication import RqSimple
-from ...communication import RsCheckSum
+from ...communication import RqPackage
 from ...communication import RsDataPacket
-from ...communication import RsSimple
-from ...communication.port import Port
-from ...communication.rqpid import RqPidCommand
+from ...communication import RsPackage
 from ...communication.rqprimitives import RqByte
 from ...instructions.InstructionException import InstructionException
 
 
 class UpImage:
-    def __init__(self, port, address=0xFFFFFFFF):
-        # type: (Port, int) -> UpImage
-        self.port = port
-        self.address = address
+    def __init__(self, rq, rs):
+        # type: (RqPackage, RsPackage) -> UpImage
+        self.rq = rq
+        self.rs = rs
 
-    def execute(self):
+    def image(self):
         # type: () -> Image
-        RqSimple(
-            pid=RqPidCommand(),
-            content=RqByte(0x0A),
-            address=self.address
-        ).send_to(self.port)
+        self.rq.send(RqByte(0x0A))
 
-        bytes = RsCheckSum(RsSimple(self.port)).bytes()
+        bytes = self.rs.bytes()
         confirmation = bytes.content()[0]
         if confirmation != 0:
             raise InstructionException(
-                "Can not execute UpImage, because there is not valid confirmation code: {0}".format(confirmation)
+                "Can not execute UpImage: {0}".format(confirmation)
             )
 
         result = Image.new('L', (256, 288), 'white')
         pixels = result.load()
 
-        content = RsDataPacket(self.port).content()
+        content = RsDataPacket(self.rs).content()
         y = 0
         for line in content:
             x = 0

@@ -20,4 +20,4 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 from Store import Store
-from TemplateNum import TemplateNum
+from TemplateCount import TemplateCount
