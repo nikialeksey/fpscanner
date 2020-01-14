@@ -8,6 +8,10 @@ If your scanner is ZFM-20 or his cheap clone then it possible. I made this libra
 [pyfingerprint](https://github.com/bastianraschke/pyfingerprint), so it may also work with ZFM-60, ZFM-70, ZFM-100,
 R303 and R305.
 
+## Origin manuals
+Fingerprint protocol specs are taken from 
+[original ZHM-20 user manual](https://raw.githubusercontent.com/nikialeksey/fpscanner/master/ZFM+user+manualV15.pdf).
+
 ## Terminology
 
 **Image**
@@ -54,4 +58,54 @@ with SerialPort(Serial(port='...', baudrate=9600 * 6, timeout=2)) as port:
     image.show()
 ```
 
-@todo #none:30m Add explanation for enrolling, searching and matching
+### Matching characteristics
+
+Another more complex task - match characteristics of two fingerprints. Fingerprint scanner can matching only two 
+fingerprints and it has two buffers for that operation - `RqCharBuffer1` and `RqCharBuffer2`.
+```python
+with SerialPort(Serial(port='...', baudrate=9600 * 6, timeout=2)) as port:
+    rq = RqCommand(port)
+    rs = RsSimple(port)
+    print 'Wait for finger...'
+    while not Scan(rq, rs).is_scanned():
+        pass
+    Img2Tz(rq, rs, RqCharBuffer1()).execute()
+
+    print 'Once again...'
+    while not Scan(rq, rs).is_scanned():
+        pass
+    Img2Tz(rq, rs, RqCharBuffer2()).execute()
+
+    print 'Score {0}'.format(Match(rq, rs).score())
+```
+
+### Enroll fingerprint
+
+Another complex task is enroll a finger.
+```python
+with SerialPort(Serial(port='...', baudrate=9600 * 6, timeout=2)) as port:
+    rq = RqCommand(port)
+    rs = RsSimple(port)
+    print 'Wait for finger...'
+    while not Scan(rq, rs).is_scanned():
+        pass
+
+    Img2Tz(rq, rs, RqCharBuffer1()).execute()
+    searchResult = Search(rq, rs, start=0, count=TemplateCount(rq, rs).as_int()).execute()
+
+    if searchResult.code() == 0:
+        print 'Template already exist'
+        exit(1)
+
+    print 'Once again...'
+    while not Scan(rq, rs).is_scanned():
+        pass
+
+    Img2Tz(rq, rs, RqCharBuffer2()).execute()
+    score = Match(rq, rs).score()
+    RegModel(rq, rs).execute()
+    Store(rq, rs, RqCharBuffer1(), 1).execute()
+    print 'Stored success!'
+```
+
+@todo #1:30m Add deletion enrolled fingers
