@@ -17,7 +17,7 @@ from fpscanner.instructions.image import UpImage
 from fpscanner.instructions.template import Store
 from fpscanner.instructions.template import TemplateCount
 
-with SerialPort(Serial(port='COM6', baudrate=9600 * 6, timeout=2)) as port:
+with SerialPort(Serial(port='COM5', baudrate=9600 * 6, timeout=2)) as port:
     rq = RqCommand(port)
     rs = RsCheckHeader(RsCheckSum(RsSimple(port)))
     Handshake(rq, rs).make()
@@ -37,7 +37,7 @@ with SerialPort(Serial(port='COM6', baudrate=9600 * 6, timeout=2)) as port:
         pass
 
     Img2Tz(rq, rs, RqCharBuffer1()).execute()
-    searchResult = Search(rq, rs, 0, TemplateCount(rq, rs).as_int(), RqCharBuffer1()).execute()
+    searchResult = Search(rq, rs, start=0, count=TemplateCount(rq, rs).as_int()).execute()
 
     if searchResult.code() == 0:
         print 'Template already exist'
@@ -48,7 +48,7 @@ with SerialPort(Serial(port='COM6', baudrate=9600 * 6, timeout=2)) as port:
         pass
 
     Img2Tz(rq, rs, RqCharBuffer2()).execute()
-    score = Match(rq, rs).score()
+    print 'Score {0}'.format(Match(rq, rs).score())
     RegModel(rq, rs).execute()
     Store(rq, rs, RqCharBuffer1(), 2).execute()
     print 'Stored success!'
