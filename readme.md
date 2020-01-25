@@ -108,4 +108,27 @@ with SerialPort(Serial(port='...', baudrate=9600 * 6, timeout=2)) as port:
     print 'Stored success!'
 ```
 
+### Match fingerprint with it db saved version
+
+```python
+with SerialPort(Serial(port='...', baudrate=9600 * 6, timeout=2)) as port:
+    rq = RqCommand(port)
+    rs = RsSimple(port)
+    while not Scan(rq, rs).is_scanned():
+        pass
+    Img2Tz(rq, rs, RqCharBuffer1()).execute()  # save scanned finger to the buffer 1
+    
+    templatesCount = TemplateCount(rq, rs).as_int()  # get all templates count
+    searchResult = Search(rq, rs, start=0, count=templatesCount).execute()  # find finger in the db
+    
+    if searchResult.code() != 0:
+        print('Finger has not been saved!')
+    else:
+        number = searchResult.number()  # finger index in the db
+        print('Finger found in index {0}'.format(number))
+        LoadChar(rq, rs, RqCharBuffer2(), number).execute()  # extract original template to the buffer 2
+    
+        print('Score {0}'.format(Match(rq, rs).score()))  # Match it!
+```
+
 @todo #1:30m Add deletion enrolled fingers
