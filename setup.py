@@ -21,7 +21,7 @@
 # SOFTWARE.
 import setuptools
 
-with open('README.md', 'r') as fh:
+with open('readme.md', 'r') as fh:
     long_description = fh.read()
 
 with open('requirements.txt') as r:
@@ -31,7 +31,7 @@ with open('requirements.txt') as r:
 
 setuptools.setup(
     name='fpscanner',
-    version='0.1.0',
+    version='0.1.1',
     description='',
     long_description=long_description,
     long_description_content_type="text/markdown",
